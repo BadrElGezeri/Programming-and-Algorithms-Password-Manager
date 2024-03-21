@@ -1,11 +1,16 @@
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <sstream>
+#include "base64.cpp"
+#include "base64.h"
+#include <random>
+#include <cstdlib> 
 #include <string>
+
 using namespace std;
 
-void startup(), afterSuccessfulLogin();
-
+void afterSuccessfulLogin(), retrievePassword(), generatePassword();
+string username;
 
 string encrypt(string text)
 {
@@ -67,11 +72,64 @@ string decrypt(string text)
     return result;
 }
 
-void retrievePassword() {
+static void validateUserChoice(int& userChoice,int lowerrange, int upperrange) {
 
+    while (userChoice < lowerrange || userChoice > upperrange || typeid(userChoice) != typeid(int)) {
+        cout << "Invalid option picked, pick another option:" << endl;
+        cin.clear();
+        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cin >> userChoice;
+    }
+    return;
 }
 
-void insertPassword() {
+void retrievePassword(string username) {
+    ifstream file;
+    string line;
+    file.open("passwords", std::ios_base::app);
+    if (file.is_open()) {
+        cout << "Platform - " << "Email/Username - " << "Password" << endl;
+        while (getline(file, line)) {
+            int i = 1;
+            string decoded = base64_decode(line);
+            size_t pos = decoded.find('|');
+            if (pos != string::npos) {
+                // Extract the username in the passwords file
+                string user = decoded.substr(0, pos);
+                if (username == user) {
+                    size_t pos2 = decoded.find('|', pos + 1);
+                    size_t pos3 = decoded.find('|', pos2 + 1);
+                    if (pos2 != string::npos && pos3 != string::npos) {
+                        string platform = decoded.substr(pos + 1, pos2 - pos - 1);
+                        string userOrEmail = decoded.substr(pos2 + 1, pos3 - pos2 - 1);
+                        string pass = decrypt(decoded.substr(pos3 + 1));
+                        // Output the retrieved 
+                        cout << platform << " - " << userOrEmail << " - " << pass << endl;
+                    }
+                }
+            }
+        }
+    }
+    else {
+        cout << "Error while retreiving the password, try again" << endl;
+    }
+    cout << "All saved passwords" << endl;
+    afterSuccessfulLogin();
+}
+
+void insertPassword(string username, string platform, string email, string passwd) {
+    fstream file;
+    file.open("passwords", std::ios_base::app);
+    if (file.is_open()) {
+        string encoded = base64_encode(username +"|" + platform + "|" + email + "|" + encrypt(passwd));
+        file << encoded << endl;
+        file.close();
+        cout << "Password saved successfully!" << endl;
+    }
+    else {
+        file.close();
+        cout << "Error while trying to insert a password entry, try again" << endl;
+    }
 
 }
 
@@ -91,15 +149,16 @@ bool hasSpace(const string& str) {
 bool validatePassword(const string& username, const string& passwd) {
     ifstream file("users");
     string line;
-
+    
     while (getline(file, line)) {
         // Find the position of the comma separating username and password
-        size_t pos = line.find('|');
+        string decoded = base64_decode(line);
+        size_t pos = decoded.find('|');
 
         if (pos != string::npos) {
             // Extract username and password
-            string user = line.substr(0, pos);
-            string pass = line.substr(pos + 1);
+            string user = decoded.substr(0, pos);
+            string pass = decoded.substr(pos + 1);
 
             // Check if the extracted username matches the input username
             if (user == username) {
@@ -120,18 +179,6 @@ bool validatePassword(const string& username, const string& passwd) {
 void startup() {
     string userPassword, applicationName;
     int userChoice;
-
-    cout << R"(
--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
- ____                                     _   __  __                                   
-|  _ \ __ _ ___ _____      _____  _ __ __| | |  \/  | __ _ _ __   __ _  __ _  ___ _ __ 
-| |_) / _` / __/ __\ \ /\ / / _ \| '__/ _` | | |\/| |/ _` | '_ \ / _` |/ _` |/ _ \ '__|
-|  __/ (_| \__ \__ \\ V  V / (_) | | | (_| | | |  | | (_| | | | | (_| | (_| |  __/ |   
-|_|   \__,_|___/___/ \_/\_/ \___/|_|  \__,_| |_|  |_|\__,_|_| |_|\__,_|\__, |\___|_|   
-                                                                       |___/           
--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-)" << endl;
-    cout << "Welcome to your All-in-One Password Manager" << endl;
     cout << "Pick one of the following options to proceed:" << endl;
     cout << R"(
 1- Login
@@ -141,11 +188,7 @@ void startup() {
 
     //cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     cin >> userChoice;
-    while (userChoice < 1 || userChoice > 3) {
-        cout << "Invalid option picked, pick another option:" << endl;
-        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        cin >> userChoice;
-    }
+    validateUserChoice(userChoice, 1, 3);
     if (userChoice == 1) {
         string usernameLogin, passwordLogin;
         cout << "Login option picked" << endl;
@@ -163,14 +206,14 @@ void startup() {
             }
             else {
                 if (validatePassword(usernameLogin, passwordLogin)) {
+                    cout << "Successfully logged in" << endl;
+                    username = usernameLogin;
                     afterSuccessfulLogin();
                 }
                 else {
-                    cout << "Incorrect password, try again";
+                    cout << "Incorrect password, try again" << endl;
                     startup();
                 }
-                
-                //auto userEnteredPasswdHash = SHA256HashString(passwordLogin);
             }
         }
 
@@ -198,8 +241,19 @@ void startup() {
                 string encryptedPasswd = encrypt(passwordSignup);
                 fstream file;
                 file.open("users", std::ios_base::app);
-                file << usernameSignup << "|" << encryptedPasswd << endl;
-                startup();
+                if (file.is_open()) {
+                    int ID = rand();
+                    string encoded = base64_encode(usernameSignup + "|" + encryptedPasswd);
+                    file << encoded << endl;
+                    file.close();
+                    cout << "Signed up successfully!" << endl;
+                    startup();
+                }
+                else {
+                    cout << "Error while saving your account, try again" << endl;
+                }
+            
+
             }
         }
     }
@@ -210,27 +264,35 @@ void startup() {
 
 
 void afterSuccessfulLogin() {
-    string userPassword, applicationName;
+    string userUsernameOREmail, userPassword, applicationName,temp;
     int userChoice;
-    cout << "Successfully logged in" << endl;
     cout << "Choose one of the following options" << endl;
     cout << R"(
-1- Retreive Passwords
+1- List all saved passwords
 2- Enter a new password entry
 3- Generate a Password
 4- Exit Application
 )";
     cin >> userChoice;
+    validateUserChoice(userChoice, 1, 4);
     if (userChoice == 4) {
         exit(0);
     }
     else if (userChoice == 1) {
-        cout << "Enter the application name or website you would like to retreive the password for:";
-        cin >> applicationName;
+        retrievePassword(username);
         //Search for the application name in the datatbase and retreive all accounts associated with it.
     }
     else if (userChoice == 2) {
         //New Password Entry (Username/email and Password)
+        cout << "Enter the application name or website you would like to retreive the password for:" << endl;
+        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        getline(cin, applicationName);
+        cout << "Enter an email/username:" << endl;
+        getline(cin, userUsernameOREmail);
+        cout << "Enter the password to save:" << endl;
+        getline(cin, userPassword);
+        insertPassword(username,applicationName, userUsernameOREmail, userPassword);
+        afterSuccessfulLogin();
     }
     else if (userChoice == 3) {
         //Password Generation
@@ -238,7 +300,7 @@ void afterSuccessfulLogin() {
     else {
         cout << "Invalid Input";
     }
-
+    
 }
 
 
@@ -246,6 +308,18 @@ void afterSuccessfulLogin() {
 
 int main()
 {
+
+    cout << R"(
+-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+ ____                                     _   __  __                                   
+|  _ \ __ _ ___ _____      _____  _ __ __| | |  \/  | __ _ _ __   __ _  __ _  ___ _ __ 
+| |_) / _` / __/ __\ \ /\ / / _ \| '__/ _` | | |\/| |/ _` | '_ \ / _` |/ _` |/ _ \ '__|
+|  __/ (_| \__ \__ \\ V  V / (_) | | | (_| | | |  | | (_| | | | | (_| | (_| |  __/ |   
+|_|   \__,_|___/___/ \_/\_/ \___/|_|  \__,_| |_|  |_|\__,_|_| |_|\__,_|\__, |\___|_|   
+                                                                       |___/           
+-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*--*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+)" << endl;
+    cout << "Welcome to your All-in-One Password Manager" << endl;
     startup();
     return 0;
 }
