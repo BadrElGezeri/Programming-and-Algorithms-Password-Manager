@@ -86,6 +86,7 @@ static void validateUserChoice(int& userChoice,int lowerrange, int upperrange) {
 void retrievePassword(string username) {
     ifstream file;
     string line;
+    bool empty = true;
     file.open("passwords", std::ios_base::app);
     if (file.is_open()) {
         cout << "Platform - " << "Email/Username - " << "Password" << endl;
@@ -105,7 +106,12 @@ void retrievePassword(string username) {
                         string pass = decrypt(decoded.substr(pos3 + 1));
                         // Output the retrieved 
                         cout << platform << " - " << userOrEmail << " - " << pass << endl;
+                        empty = false;
                     }
+                }
+                else {
+                    cout << "No saved passwords" << endl;
+                    break;
                 }
             }
         }
@@ -113,7 +119,9 @@ void retrievePassword(string username) {
     else {
         cout << "Error while retreiving the password, try again" << endl;
     }
-    cout << "All saved passwords" << endl;
+    if (!empty) {
+        cout << "All saved passwords" << endl;
+    }
     afterSuccessfulLogin();
 }
 
@@ -133,9 +141,24 @@ void insertPassword(string username, string platform, string email, string passw
 
 }
 
-void generatePassword() {
+void generatePassword(int length) {
+    const char genAlphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()-+0123456789";
+    int size = sizeof(genAlphabet) - 1;
 
+    srand(time(nullptr));
+
+    cout << "Generated password: ";
+    for (int i = 0; i < length; ++i) {
+        // Generate a random index within the genAlphabet array
+        int index = rand() % size;
+
+        // Print the character at the randomly selected index
+        cout << genAlphabet[index];
+    }
+    cout << endl;
+    afterSuccessfulLogin();
 }
+
 
 bool hasSpace(const string& str) {
     for (char c : str) {
@@ -175,15 +198,19 @@ bool validatePassword(const string& username, const string& passwd) {
     return false; // Username not found
 }
 
+bool validateNotEmptyInput(string input) {
+
+
+}
 
 void startup() {
     string userPassword, applicationName;
     int userChoice;
     cout << "Pick one of the following options to proceed:" << endl;
     cout << R"(
-1- Login
-2- Sign up
-3- Exit Application
+[1]- Login
+[2]- Sign up
+[3]- Exit Application
 )";
 
     //cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -191,20 +218,20 @@ void startup() {
     validateUserChoice(userChoice, 1, 3);
     if (userChoice == 1) {
         string usernameLogin, passwordLogin;
-        cout << "Login option picked" << endl;
-        cout << "Enter your username" << endl;
+        cout << "Login option picked" << endl << endl;
+        cout << "[]Enter your username:" << endl;
         cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         getline(cin, usernameLogin);
-        if (hasSpace(usernameLogin)) {
-            cout << "Username cannot contain a space" << endl; // Tests for space entered in the username
+        while (hasSpace(usernameLogin)) {
+            cout << "Username cannot contain a space, try again:" << endl; // Tests for space entered in the username
+            getline(cin, usernameLogin);
         }
-        else {
-            cout << "Enter your password" << endl;
+            cout << "[]Enter your password:" << endl;
             getline(cin, passwordLogin);
-            if (hasSpace(passwordLogin)) {
-                cout << "Password cannot contain a space" << endl; // Tests for space entered in the password
-            }
-            else {
+        while (hasSpace(passwordLogin)) {
+            cout << "Password cannot contain a space, try again:" << endl; // Tests for space entered in the password
+            getline(cin, passwordLogin);
+        }
                 if (validatePassword(usernameLogin, passwordLogin)) {
                     cout << "Successfully logged in" << endl;
                     username = usernameLogin;
@@ -215,29 +242,24 @@ void startup() {
                     startup();
                 }
             }
-        }
+        
 
-    }
     else if (userChoice == 2) {
         string usernameSignup, passwordSignup;
-        cout << "Sign up option picked" << endl;
-        cout << "Enter your username" << endl;
+        cout << "Sign up option picked" << endl << endl;
+        cout << "[]Enter your username" << endl;
         cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         getline(cin, usernameSignup);
-        if (hasSpace(usernameSignup)) {
-            cout << "Username cannot contain a space" << endl; // Tests for space entered in the username
-            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        while (hasSpace(usernameSignup)) {
+            cout << "Username cannot contain a space, try again:" << endl; // Tests for space entered in the username
             getline(cin, usernameSignup);
         }
-        else {
-            cout << "Enter your password" << endl;
+            cout << "[]Enter your password" << endl;
             getline(cin, passwordSignup);
-            if (hasSpace(passwordSignup)) {
-                cout << "Password cannot contain a space" << endl; // Tests for space entered in the password
-                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            while(hasSpace(passwordSignup)) {
+                cout << "Password cannot contain a space, try again:" << endl; // Tests for space entered in the password
                 getline(cin, passwordSignup);
             }
-            else {
                 string encryptedPasswd = encrypt(passwordSignup);
                 fstream file;
                 file.open("users", std::ios_base::app);
@@ -255,8 +277,8 @@ void startup() {
             
 
             }
-        }
-    }
+        
+    
     else if (userChoice == 3) {
         exit(0);
     }
@@ -268,10 +290,10 @@ void afterSuccessfulLogin() {
     int userChoice;
     cout << "Choose one of the following options" << endl;
     cout << R"(
-1- List all saved passwords
-2- Enter a new password entry
-3- Generate a Password
-4- Exit Application
+[1]- List all saved passwords
+[2]- Enter a new password entry
+[3]- Generate a Password
+[4]- Exit Application
 )";
     cin >> userChoice;
     validateUserChoice(userChoice, 1, 4);
@@ -280,27 +302,32 @@ void afterSuccessfulLogin() {
     }
     else if (userChoice == 1) {
         retrievePassword(username);
-        //Search for the application name in the datatbase and retreive all accounts associated with it.
     }
     else if (userChoice == 2) {
         //New Password Entry (Username/email and Password)
-        cout << "Enter the application name or website you would like to retreive the password for:" << endl;
+        cout << "[]Enter the application name or website you would like to retreive the password for:" << endl;
         cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         getline(cin, applicationName);
-        cout << "Enter an email/username:" << endl;
+        cout << "[]Enter an email/username:" << endl;
         getline(cin, userUsernameOREmail);
-        cout << "Enter the password to save:" << endl;
+        cout << "[]Enter the password to save:" << endl;
         getline(cin, userPassword);
         insertPassword(username,applicationName, userUsernameOREmail, userPassword);
         afterSuccessfulLogin();
     }
     else if (userChoice == 3) {
-        //Password Generation
-    }
-    else {
-        cout << "Invalid Input";
-    }
-    
+        int passwordLength;
+        cout << "[]How long do you want your password to be?" << endl;
+        cout << "(Minimum length is 8)" << endl;
+        cin >> passwordLength;
+        while (passwordLength < 8) {
+            cout << "[]Invalid password length, enter a number larger than 8:" << endl;
+            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            cin >> passwordLength;
+        }
+        generatePassword(passwordLength);
+        cout << endl;
+    }  
 }
 
 
