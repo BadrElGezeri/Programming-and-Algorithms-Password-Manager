@@ -35,23 +35,14 @@ class Linkedlist {
     Node* head;
 
 public:
-    // Default constructor 
-    Linkedlist() { head = NULL; }
 
-    // Function to insert a 
-    // node at the end of the 
-    // linked list. 
-    void insertNode(string);
+    Linkedlist() { head = NULL; } // Default constructor 
 
-    // Function to print the 
-    // linked list. 
-    void printList();
+    void insertNode(string); // Insert a node at the end of the linked list
 
-    // Function to delete the 
-    // node at given position 
-    void deleteNode(int);
+    void deleteNode(int); // Delete a specific node using an index number
 
-    void overwriteFile(const string&);
+    void overwriteFile(const string&); // Overwrite the contents of a specif file
 };
 
 void Linkedlist::deleteNode(int nodeOffset)
@@ -60,155 +51,122 @@ void Linkedlist::deleteNode(int nodeOffset)
     int ListLen = 0;
 
     if (head == NULL) {
-        cout << "List empty." << endl;
+        cout << "List empty." << endl; // If the linked list is empty output that it is
         return;
     }
 
-    // Find length of the linked-list. 
+    
     while (temp1 != NULL) {
-        temp1 = temp1->next;
+        temp1 = temp1->next; // Find length of the linked-list
         ListLen++;
     }
 
-    // Check if the position to be 
-    // deleted is greater than the length 
-    // of the linked list. 
-    if (ListLen < nodeOffset) {
+
+    if (ListLen < nodeOffset) { // Checks if the index/number of the node to delete is larger than the size of the node
         cout << "[]Password entry does not exist"
             << endl;
         return;
     }
 
-    // Declare temp1 
-    temp1 = head;
+    
+    temp1 = head; // Declare temp1 
 
-    // Deleting the head. 
-    if (nodeOffset == 1) {
+    
+    if (nodeOffset == 1) { // Deleting the head
 
-        // Update head 
-        head = head->next;
+        head = head->next; // Update head (Making the next node the head)
         delete temp1;
         cout << "[]Passowrd deleted successfully" << endl;
         return;
     }
 
     // Traverse the list to 
-    // find the node to be deleted. 
+    // find the node to be deleted
     while (nodeOffset-- > 1) {
 
-        // Update temp2 
-        temp2 = temp1;
+        temp2 = temp1; // Update temp2 
 
-        // Update temp1 
-        temp1 = temp1->next;
+        temp1 = temp1->next; // Update temp1 
     }
 
     // Change the next pointer 
-    // of the previous node. 
+    // of the previous node
     temp2->next = temp1->next;
     cout << "[]Passowrd deleted successfully" << endl;
-    // Delete the node 
-    delete temp1;
+    
+    delete temp1; // Delete the temp node 
 }
 
 void Linkedlist::insertNode(string data)
-{
-    // Create the new Node. 
-    Node* newNode = new Node(data);
+{ 
+    Node* newNode = new Node(data); // Create the new Node
 
-    // Assign to head 
-    if (head == NULL) {
+    
+    if (head == NULL) { // If list is empty assign to head 
         head = newNode;
         return;
     }
 
-    // Traverse till end of list 
-    Node* temp = head;
+     
+    Node* temp = head; // Traverse till end of list
     while (temp->next != NULL) {
 
-        // Update temp 
-        temp = temp->next;
+        temp = temp->next; // Update temp 
     }
 
-    // Insert at the last. 
-    temp->next = newNode;
+    temp->next = newNode; // Insert at the last 
 }
 
-void Linkedlist::printList()
-{
-    Node* temp = head;
+void Linkedlist::overwriteFile(const string& filename) {
+    
+    ofstream file(filename, ios::trunc); // Open the file for writing, truncating it
 
-    // Check for empty list. 
-    if (head == NULL) {
-        cout << "List empty" << endl;
-        return;
-    }
-
-    // Traverse the list. 
-    while (temp != NULL) {
-        cout << temp->data << " ";
-        temp = temp->next;
-    }
-}
-
-void Linkedlist::overwriteFile(const std::string& filename) {
-    // Open the file for writing, truncating it
-    ofstream file(filename, std::ios::trunc);
-
-    // Check if the file is opened successfully
-    if (!file.is_open()) {
-        cout << "Unable to open file: " << filename << std::endl;
+    
+    if (!file.is_open()) { // Check if the file is opened successfully
+        cout << "Unable to open file: " << filename << endl; 
         return;
     }
 
     Node* temp = head;
 
-    // Traverse the list and write each node's data to the file
-    while (temp != NULL) {
-        file << temp->data << std::endl;
+    
+    while (temp != NULL) { // Traverse the list and write each node's data to the file
+        file << temp->data << endl;
         temp = temp->next;
     }
 
-    // Close the file
-    file.close();
+    file.close(); // Close the file
 }
 
 string encrypt(string text)
 {
     string result = "";
-    int key = 4;
+    int key = 4; // Encryption Key
 
-    // String alphabet
-    string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_=-+";
+    string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_=-+"; // Encryption Alphabet
 
     // Traverse text
     for (int i = 0; i < text.length(); i++) {
-        // Find the position of the current character in the alphabet
-        size_t pos = alphabet.find(text[i]);
+        
+        size_t pos = alphabet.find(text[i]); // Find the position of the current character in the alphabet
 
-        // If the character is found in the alphabet
-        if (pos != string::npos) {
-            // Shift the character by 's' positions
-            pos = (pos + 4) % alphabet.length();
-            // Append the encrypted character to the result
-            result += alphabet[pos];
+
+        if (pos != string::npos) { // Validation if the character is found within the alphabet
+            pos = (pos + key) % alphabet.length(); // Shift the character by the key
+            result += alphabet[pos]; // Append the encrypted character to the result
         }
         else {
-            // If the character is not found in the alphabet, keep it unchanged
-            result += text[i];
+            result += text[i];// If the character is not found in the alphabet, keep it unchanged
         }
     }
-
-    // Return the resulting string
-    return result;
+    return result; // Return the resulting string
 }
 
 string decrypt(string text)
 {
     string result = "";
     int key = 4;
-    // String alphabet
-    string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_=-+";
+    string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_=-+"; // String alphabet
 
     // Traverse text
     for (int i = 0; i < text.length(); i++) {
@@ -217,14 +175,13 @@ string decrypt(string text)
 
         // If the character is found in the alphabet
         if (pos != string::npos) {
-            // Shift the character by 's' positions in the opposite direction (decrypt)
-            pos = (pos - 4 + alphabet.length()) % alphabet.length();
-            // Append the decrypted character to the result
-            result += alphabet[pos];
+ 
+            pos = (pos - key + alphabet.length()) % alphabet.length(); //  Shift the character by the key in the opposite direction (decrypt)
+            
+            result += alphabet[pos]; // Append the decrypted character to the result
         }
         else {
-            // If the character is not found in the alphabet, keep it unchanged
-            result += text[i];
+            result += text[i]; // If the character is not found in the alphabet, keep it unchanged
         }
     }
 
@@ -234,12 +191,14 @@ string decrypt(string text)
 
 static void validateUserChoice(int& userChoice,int lowerrange, int upperrange,string state) {
     int i = 0;
-    while (userChoice < lowerrange || userChoice > upperrange || typeid(userChoice) != typeid(int)) {
+    // Check if the userChoice is within accept range and is 'int'
+    while (userChoice < lowerrange || userChoice > upperrange || typeid(userChoice) != typeid(int)) { 
         cout << "[]Invalid option picked, pick another option:" << endl;
         cin.clear();
-        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cout << "> ";
         cin >> userChoice;
+        // If user enters invalid inputs 10 times clear the CLI
         if (i > 10) {
             system("CLS");
             cout << "";
@@ -269,36 +228,34 @@ static void validateUserChoice(int& userChoice,int lowerrange, int upperrange,st
 }
 
 void retrievePassword(string username) {
-    Linkedlist list;
+    Linkedlist list; // Linked list creation
     ifstream file;
     string line;
     bool empty = true;
-    file.open(username + "_passwords", std::ios_base::app);
+    file.open(username + "_passwords", ios_base::app);
     if (file.is_open()) {
-        if (file.peek() == std::ifstream::traits_type::eof()) {
+        if (file.peek() == ifstream::traits_type::eof()) {
             cout << "[]No saved passwords" << endl;
             afterSuccessfulLogin();
         }
         else {
             cout << "No. - " << "Platform - " << "Email/Username - " << "Password" << endl;
             int i = 1;
-            while (getline(file, line)) {
-                list.insertNode(line);
+            while (getline(file, line)) { // Iterate through every line in the file
+                list.insertNode(line); // Node creation
                 string decoded = base64_decode(line);
                 size_t pos = decoded.find('|');
                 if (pos != string::npos) {
                     // Extract the username in the passwords file
-                    string user = decoded.substr(0, pos);
+                    string platform = decoded.substr(0, pos);
                     size_t pos2 = decoded.find('|', pos + 1);
-                    size_t pos3 = decoded.find('|', pos2 + 1);
-                    if (pos2 != string::npos && pos3 != string::npos) {
-                        string platform = decoded.substr(pos + 1, pos2 - pos - 1);
-                        string userOrEmail = decoded.substr(pos2 + 1, pos3 - pos2 - 1);
-                        string pass = decrypt(decoded.substr(pos3 + 1));
-                        // Output the retrieved 
+                    if (pos2 != string::npos) {
+                        string userOrEmail = decoded.substr(pos + 1, pos2 - pos - 1);
+                        string pass = decrypt(decoded.substr(pos2 + 1));
+                        // Output
                         cout << "[" << i << "] " << platform << " - " << userOrEmail << " - " << pass << endl;
-                        i = i + 1;
-                        empty = false;
+                        i++;
+                        empty = false; // bool value to prove that password file not empty
                     }
                 }
             }
@@ -334,9 +291,9 @@ void retrievePassword(string username) {
 
 void insertPassword(string username, string platform, string email, string passwd) {
     fstream file;
-    file.open(username+"_passwords", std::ios_base::app);
+    file.open(username+"_passwords", ios_base::app);
     if (file.is_open()) {
-        string encoded = base64_encode(username +"|" + platform + "|" + email + "|" + encrypt(passwd));
+        string encoded = base64_encode(platform + "|" + email + "|" + encrypt(passwd));
         file << encoded << endl;
         file.close();
         cout << "[]Password saved successfully!" << endl;
@@ -352,7 +309,7 @@ void generatePassword(int length) {
     const char genAlphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()-+0123456789";
     int size = sizeof(genAlphabet) - 1;
 
-    srand(time(nullptr));
+    srand(time(nullptr)); // Seeding the random number generator
 
     cout << "[]Generated password: ";
     for (int i = 0; i < length; ++i) {
@@ -377,7 +334,7 @@ bool validatePassword(const string& username, const string& passwd) {
     ifstream file("users");
     string line;
     while (getline(file, line)) {
-        // Find the position of the comma separating username and password
+        // Find the position of the pipe separating username and password
         string decoded = base64_decode(line);
         size_t pos = decoded.find('|');
 
@@ -386,12 +343,15 @@ bool validatePassword(const string& username, const string& passwd) {
             string user = decoded.substr(0, pos);
             string pass = decoded.substr(pos + 1);
 
-            // Check if the extracted username matches the input username
+            // Check if the extracted username matches the username entered by user
             if (user == username) {
-                // If yes, check if the extracted password matches the input password
+                // If yes, check if the extracted password matches the password entered by user
                 if (decrypt(pass) == passwd) {
                     bool validate = true;
                     return validate;
+                }
+                else {
+                    return false; // Incorrect password entered by user
                 }
                 
             }
@@ -405,12 +365,12 @@ bool validateUsernameAvailability(const string& username) {
     ifstream file("users");
     string line;
     while (getline(file, line)) {
-        // Find the position of the comma separating username and password
+        // Find the position of the pipe separating username and password
         string decoded = base64_decode(line);
         size_t pos = decoded.find('|');
 
         if (pos != string::npos) {
-            // Extract username and password
+            // Extract username
             string user = decoded.substr(0, pos);
 
             // Check if the extracted username matches the input username
@@ -442,7 +402,7 @@ void startup() {
         string usernameLogin, passwordLogin;
         cout << "[]Login option picked" << endl << endl;
         cout << "[]Enter your username:" << endl;
-        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cout << "> ";
         getline(cin, usernameLogin);
         while (hasSpace(usernameLogin) || empty(usernameLogin)){
@@ -474,7 +434,7 @@ void startup() {
         string usernameSignup, passwordSignup;
         cout << "[]Sign up option picked" << endl << endl;
         cout << "[]Enter your username" << endl;
-        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cout << "> ";
         getline(cin, usernameSignup);
         while (!validateUsernameAvailability(usernameSignup)) {
@@ -497,7 +457,7 @@ void startup() {
             }
                 string encryptedPasswd = encrypt(passwordSignup);
                 fstream file;
-                file.open("users", std::ios_base::app);
+                file.open("users", ios_base::app);
                 if (file.is_open()) {
                     int ID = rand();
                     string encoded = base64_encode(usernameSignup + "|" + encryptedPasswd);
@@ -539,8 +499,8 @@ void afterSuccessfulLogin() {
     }
     else if (userChoice == 2) {
         //New Password Entry (Username/email and Password)
-        cout << "[]Enter the application name or website you would like to retreive the password for:" << endl;
-        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cout << "[]Enter the application name or website you would like to insert a password for:" << endl;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cout << "> ";
         getline(cin, applicationName);
         cout << "[]Enter an email/username:" << endl;
@@ -558,9 +518,9 @@ void afterSuccessfulLogin() {
         cout << "(Minimum length is 8)" << endl;
         cout << "> ";
         cin >> passwordLength;
-        while (passwordLength < 8) {
-            cout << "[]Invalid password length, enter a number larger than 8:" << endl;
-            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        while (passwordLength < 8 || passwordLength > 32) {
+            cout << "[]Invalid password length, enter a number larger than 8 and less than or equal 32:" << endl;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "> ";
             cin >> passwordLength;
         }
