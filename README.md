@@ -1,7 +1,3 @@
-  <style>
-        img { width: 60%; }
-  </style>
-
 <h1>Local Password Manager</h1>
 <p>This repository is for a Local Password Manager</p>
 <p>The password manager will have the following features</p>
